@@ -1,0 +1,72 @@
+    
+        (function() {
+        var init = function()
+        {
+            if(window.ptw_css_widgets_loaded != true)
+            {
+                        addStyleSheet('https://b2b2c.cdnpt.com/general/css/widget-master.css?v=280');
+                addStyleSheet('https://b2b2c.cdnpt.com/hotel-xcaret-mexico/css/widget-custom.css?v=280');
+                window.ptw_css_widgets_loaded = true;
+            }                 
+        addScript('https://cdnpt.com/js/1.0h/booker-2.1-min.js?v=220', function(){
+        require.config({
+        "baseUrl": "/Scripts/Widget",
+        "map": {
+        '*': {'jquery': 'noconflict'},
+        'noconflict': {'jquery': 'jquery'}
+        },
+        "paths": {
+        "jquery": "https://b2b2c.cdnpt.com/general/js/1.0f/jquery-1.7.2.min",
+        }
+        });
+        
+        require(["jquery", "widgetMain"], function($, WidgetMain){
+        var widgetMain = WidgetMain(); 
+        $.ajax({
+                url:'https://widgets.priceres.com.mx/hotel-xcaret-mexico/jsonpBooker/stub?jsoncallback=?',
+                  data: $.toDictionary({"container":"ptw-container","Version":null,"CurrentSection":3,"CurrentEngine":3,"SectionConfigs":[{"SectionTab":3,"DefaultEngine":3,"ShowVariants":false,"Code":"Packages","DefaultEngineCode":"FlightPackage"}],"EngineConfigs":[{"Code":"FlightPackage","Engine":3,"IsActive":false,"IsLoaded":false,"Url":null,"Data":null,"SubmitUri":null,"Options":null}],"UseConfigs":true,"IsModal":true,"IsHorizontal":true,"FlightPackageUserSelection":{"DepartureAirport":{"Code":"MAD","Name":"","Country":"","City":"","Uri":null,"Description":"Madrid (MAD)","KeyWordUri":null,"Restrictions":[],"FilterUri":null},"ReturningAirport":{"Code":"CUN","Name":"","Country":"","City":"","Uri":null,"Description":"Riviera Maya (CUN)","KeyWordUri":null,"Restrictions":[],"FilterUri":null},"OriginName":"","DestinationName":"Riviera Maya","DestinationId":34,"DestinationType":"1","DestinationUri":null,"DestinationHotelId":0,"PlaceName":"Hotel Xcaret Mexico All Parks All Fun Inclusive, Xcaret, Quintana Roo, México","PlaceUri":null,"PlaceType":0,"PlaceId":0,"QuoteList":true,"HotelRooms":[{"Adults":2,"Minors":2,"MinorsAges":[{"Years":0,"Months":null},{"Years":0,"Months":null}],"InfantsAges":[],"TotalPassengers":4,"AdultsPassengerTypes":[],"MinorsPassengerTypes":[]}],"ListOfHotels":null,"SelectedOutboundFlight":"","SelectedReturnFlight":"","OriginalReturningAirportCode":"CUN","singleHotelPostMode":false,"MaxAllowedPassengers":0,"TotalBookingPassengers":0,"TotalAdults":0,"TotalInfants":0,"ShowInfants":false,"CustomDisplayOrderForHotels":false,"UseSingleHotelQuoteMode":true,"AvailableHotels":null,"HotelBooker":{"Uri":"hotel-xcaret-mexico-all-parks-all-fun-inclusive","Id":310983,"DestinationId":78907,"City":"Playa del Carmen - Riviera Maya","Name":"Hotel Xcaret Mexico All Parks All Fun Inclusive","Category":null},"HotelStartDate":"0001-01-01T00:00:00","HotelEndDate":"0001-01-01T00:00:00","PartialStay":false,"ChainId":0,"StartDate":"2023-08-20T00:00:00","EndDate":"2023-08-29T00:00:00","Uri":null,"Searchbox":{"DateFormat":null,"DateFormatDisplay":null,"MaxAdults":null,"MaxMinors":null,"MaxAgeMinor":null,"MinAgeMinor":null,"MinInfants":null,"MaxInfants":null,"MaxAgeInfant":null,"MinAgeInfant":null,"DefaultSelectedAdults":null,"PostUrl":"https://paquete.hotelxcaretmexico.com/paquetes/buscar","PostUrl2":"https://paquete.hotelxcaretmexico.com/paquetes","IsProductDetail":true,"SourceHost":null,"FormMethod":1},"SourceHost":null}}),
+             dataType:'jsonp'
+                }).done(function(data){
+                  $('#ptw-container').html(data.html);
+
+                  widgetMain.init(data.options);
+               });
+       });
+
+       
+       }, undefined);
+        };
+       
+        var addScript = function(url, callback, attribute)
+        {
+           var head = document.getElementsByTagName('head')[0];
+           var script = document.createElement('script');
+           script.type = "text/javascript";
+           script.src = url;
+           if(attribute && attribute.key != "" && attribute.value != ""){
+             script.setAttribute(attribute.key, attribute.value);
+        }
+        if (script.readyState) { // IE, incl. IE9
+        script.onreadystatechange = function() {
+        if (script.readyState == "loaded" || script.readyState == "complete") {
+        script.onreadystatechange = null;
+        callback();
+        }
+        };            
+        }else{
+        script.onload = function(){callback();};
+        }
+        head.appendChild(script);
+        };
+        var addStyleSheet = function(url)
+        {
+        var head = document.getElementsByTagName('head')[0];
+        var link = document.createElement('link');
+        link.type = "text/css";
+        link.rel = "stylesheet";
+        link.href = url;
+        head.appendChild(link);
+        };
+        init();
+        })();
+    

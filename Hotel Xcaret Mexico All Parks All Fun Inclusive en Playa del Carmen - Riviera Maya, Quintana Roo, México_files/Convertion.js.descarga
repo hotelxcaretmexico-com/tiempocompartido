@@ -1,0 +1,277 @@
+PointCalculatorBase  = function(){
+	this.implementor = new PointCalculatorConcreteImpl();
+};
+
+PointCalculatorBase.prototype.setImplementor = function(implementor){
+	this.implementor = implementor;
+};
+
+PointCalculatorBase.prototype.calculate = function(request)
+{
+	return this.implementor.calculate(request);
+};
+
+PointCalculatorBase.prototype.convertToCurrencyFromPoints = function (request)
+{
+   return this.implementor.convertToCurrencyFromPoints(request);
+}
+
+PointCalculatorBase.prototype.round = function(toRound, fromCurrency, toCurrency, affiliateId)
+{
+	return this.implementor.round(toRound, fromCurrency, toCurrency, affiliateId);
+};
+
+var PointCalculatorConcreteImpl = function()
+{
+	this.exchangeRate = new PointExchangeRate();
+}
+
+var UserPointsRound = function (value) {
+    var pr = new PointRepository();
+    var point = new PointExchangeRate();
+    var config = pr.getConfiguration(null, null, null);
+    return point.round(value, config.multiplierToRound);
+}
+
+PointCalculatorConcreteImpl.prototype.calculate = function(request)
+{
+         var that = this;
+
+         var methods = {
+            PercentageMinimum: function () {
+               var response = new PointCalculatorResponse();
+               var exchangeRateTotalRequest = { fromCurrency: request.fromCurrency, toCurrency: request.toCurrency, affiliateId: request.affiliateId, amount: request.amount, multiplierToRound: config.multiplierToRound, roundit: request.roundit , forceSection: request.forceSection};
+               response.amount = exchangeRateRequest.amount;
+               if (request.percentageInPoints > 0)
+                  exchangeRateRequest.amount = exchangeRateRequest.amount * request.percentageInPoints;
+               else
+                  exchangeRateRequest.amount = exchangeRateRequest.amount * config.minimumPercentage;
+
+               response.AmountInBaseCurrency = exchangeRateRequest.amount;
+
+               response.partialAmountInPoints = Number((that.exchangeRate.convert(exchangeRateRequest)));
+               response.totalAmountInPoints = Number((that.exchangeRate.convert(exchangeRateTotalRequest)));
+               response.partialAmountInBaseCurrency = Number(((request.amount - exchangeRateRequest.amount)));
+               response.minimumPoints = response.totalAmountInPoints;
+               return response;
+            },
+
+            AmountMinimum: function () {
+
+               var response = new PointCalculatorResponse();
+               var exchangeRateTotalRequest = { fromCurrency: request.fromCurrency, toCurrency: request.toCurrency, affiliateId: request.affiliateId, amount: request.amount, multiplierToRound: config.multiplierToRound, roundit: request.roundit, forceSection: request.forceSection };
+               response.amount = exchangeRateTotalRequest.amount;
+               var totalInBaseCurrency = request.amount;
+               response.amountInBaseCurrency = Number(config.minimumFixed / config.factor);
+
+               response.partialAmountInPoints = Number(config.minimumFixed);
+               response.totalAmountInPoints = Number(that.exchangeRate.convert(exchangeRateTotalRequest));
+
+               if (request.setToMinimumWhenAmountIsLower && config.minimumFixed >= response.totalAmountInPoints) {
+                  response.partialAmountInQuotedCurrency = 0;
+               }
+               else {
+                  response.partialAmountInBaseCurrency = Number(totalInBaseCurrency - (config.minimumFixed / config.factor));
+               }
+
+               response.minimumPoints = config.minimumFixed;
+               return response;
+            }
+         };
+
+		   var pr = new PointRepository();
+         var config = pr.getConfiguration(request.fromCurrency, request.toCurrency, request.affiliateId);
+
+         var action = 'PercentageMinimum'; // PercentageMinimum will run by default
+
+         if (config === undefined)
+			   throw "PointRepository.getConfiguration() devolvio nulo";
+
+         var exchangeRateRequest = { fromCurrency : request.fromCurrency, toCurrency : request.toCurrency, affiliateId : request.affiliateId, amount : request.amount, multiplierToRound : config.multiplierToRound, roundit : request.roundit };
+
+
+         this.exchangeRate.setImplementor(new ExchangeRateServicePoint());
+         var response = new PointCalculatorResponse();
+
+         response.amount = (exchangeRateRequest.amount).toFixed(2);
+
+         if (request.method !== undefined && typeof request.method === 'string' && typeof methods[request.method] === 'function') {
+            action = request.method;
+         }
+         else if (typeof config.calculationMode === 'string' && typeof methods[config.calculationMode] === 'function')
+         {
+            action = config.calculationMode;
+         }
+
+         response = methods[action]();
+
+         return response;
+};
+
+PointCalculatorConcreteImpl.prototype.convertToCurrencyFromPoints = function (request) {
+   var pr = new PointRepository();
+   var config = pr.getConfiguration(request.fromCurrency, request.toCurrency, request.affiliateId);
+
+   return request.amount / config.factor;
+}
+
+PointCalculatorConcreteImpl.prototype.round = function(toRound, fromCurrency, toCurrency, affiliateId)
+{
+	return this.exchangeRate.round(toRound, fromCurrency, toCurrency, affiliateId);
+};
+
+
+PointExchangeRate = function(){
+	 this.implementor = null;
+}
+
+//IExchangeRateService  implementor
+PointExchangeRate.prototype.setImplementor = function(implementor)
+{
+	this.implementor = implementor;
+}
+
+///									(PointExchangeRateRequest request)
+PointExchangeRate.prototype.convert = function(request)
+{
+	 var multiplier = Math.abs(request.multiplierToRound);
+
+	 if (multiplier == 0)
+	 {
+		throw "The multiplier in PointExchangeRate.prototype.convert() cannot be zero";
+	 }
+
+	 if (this.implementor == null)
+		throw "You should call the SetImplementor method previously";
+
+	 var response = this.implementor.convert(request);
+
+	 if (request.roundit)
+	 {
+		response.result = this.round(response.result, multiplier);
+	 }
+
+	 return response.result;
+};
+
+PointExchangeRate.prototype.round = function(toRound, fromCurrency, toCurrency, affiliateId)
+{
+    var config = PointRepository.getConfiguration(fromCurrency, toCurrency, affiliateId);
+
+	if (config == null)
+		throw "PointRepository.GetConfiguration() devolvio nulo";
+
+	return this.round(toRound, config.multiplierToRound);
+};
+
+PointExchangeRate.prototype.round = function(toRound, multiplier)
+{
+	var mod = (toRound % multiplier);
+    return (mod >= (multiplier / 2)) ? this.roundUp(toRound, multiplier) : this.roundDown(toRound, multiplier);
+};
+
+PointExchangeRate.prototype.roundUp = function( toRound,  multiplier)
+{
+	return (multiplier - toRound % multiplier) + toRound;
+};
+
+PointExchangeRate.prototype.roundDown = function(toRound, multiplier)
+{
+	return toRound - toRound % multiplier;
+};
+
+// ya se migro a 2015
+DefaultCalculatorRequest = function (amount, fromCurrency, toCurrency, affiliateId, languageId, roundIt, setToMinimum, percentageInPoints, method, forceSection)
+{
+	this.amount = amount;
+	this.fromCurrency = fromCurrency;
+	this.toCurrency = toCurrency;
+	this.affiliateId = affiliateId;
+	this.languageId = languageId;
+	this.roundit = roundIt;
+	this.setToMinimumWhenAmountIsLower = setToMinimum;
+	this.percentageInPoints = percentageInPoints;
+	this.method = method;
+    this.forceSection = forceSection;
+};
+
+// ya se migro a 2015
+PointCalculatorResponse = function(amount, totalAmountInPoints, partialAmountInPoints, partialAmountInBaseCurrency, minimumPoints)
+{
+	this.amount = amount;
+    this.totalAmountInPoints = totalAmountInPoints;
+    this.partialAmountInPoints = partialAmountInPoints;
+    this.partialAmountInBaseCurrency = partialAmountInBaseCurrency;
+    this.minimumPoints = minimumPoints;
+};
+
+
+ExchangeRateServicePoint = function(){
+
+};
+
+//(IExchangeRateRequest request)
+ExchangeRateServicePoint.prototype.convert = function(request)
+{
+    if ((typeof (request.forceSection) === "undefined"|| (typeof (request.forceSection) !== "undefined" && !request.forceSection))  && request.fromCurrency === request.toCurrency)
+	{
+		return { result : request.amount };
+	}
+
+	var factor = this.getExchangeRate(request);
+
+	var response = { result : request.amount * factor };
+	return response;
+};
+
+
+
+ExchangeRateServicePoint.prototype.getExchangeRate = function(request)
+{
+	var pr = new PointRepository();
+
+	var config = pr.getConfiguration(request.fromCurrency, request.toCurrency, request.affiliateId, request.languageId);
+
+	if(config === undefined)
+		throw "No se pudo obtener la información de configuración para el afiliado. Revisar la fuente de datos";
+
+	var factor  = config.factor;
+
+	if (factor == 0)
+	{
+		throw "El factor no debe ser 0. Configure este valor en la fuente de datos";
+	}
+
+	return factor;
+};
+
+// ya se migro a 2015
+PointConfig = function(minimumPercentage, minimumFixed, multiplierToRound, factor, calculationMode){
+	this.minimumPercentage 	= minimumPercentage;
+	this.minimumFixed 		= minimumFixed;
+	this.multiplierToRound	= multiplierToRound;
+	this.factor = factor;
+	this.calculationMode = calculationMode;
+};
+
+PointRepository = function(){
+};
+// ya se migro a 2015
+PointExchangeRateRequest = function()
+{
+      this.amount = undefined;
+      this.fromCurrency = "MXN";
+      this.toCurrency  = "PTS";
+      this.affiliateId =0;
+      this.languageId = 2;
+      this.multiplierToRound = 0;
+      this.roundit  = false;
+};
+
+// ya se migro a 2015
+ExchangeRateResponse = function()
+{
+      //IExchangeRateRequest request;
+   this.request = null;
+   this.result = 0;
+};

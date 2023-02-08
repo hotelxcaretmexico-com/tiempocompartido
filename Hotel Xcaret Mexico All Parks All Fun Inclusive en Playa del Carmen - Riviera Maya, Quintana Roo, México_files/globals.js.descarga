@@ -1,0 +1,937 @@
+function popUp(url, name, options) {
+    var ContextWindow = window.open(url, name, options);
+    ContextWindow.focus();
+    return false;
+}
+
+function openWindowPT(sUrl, sName, iT, iL, iW, iH) {
+    var win;
+    win = window.open(sUrl, sName, 'top=' + iT + ',left=' + iL + ',width=' + iW + ',height=' + iH + ',buttons=no,scrollbars=yes,location=no,menubar=no, resizable=yes,status=no,directories=no,toolbar=no');
+    switch (sName) {
+        case 'ContactUs':
+            ContactUs = win;
+            break;
+        case 'HotelGallery':
+            HotelGallery = win;
+            break;
+        case 'AboutUs':
+            AboutUs = win;
+            break;
+        case 'SitePolicy':
+            SitePolicy = win;
+            break;
+        case 'LocationMap':
+            LocationMap = win;
+            break;
+    }
+
+}
+
+
+// This function is a generic function to create form elements
+function createFormElement(element, type, name, id, value, parent) {
+    var e = document.createElement(element);
+    e.setAttribute("name", name);
+    if (type != null) e.setAttribute("type", type);
+    e.setAttribute("id", id);
+    if (value != null) e.setAttribute("value", value);
+    if (parent != null)
+        parent.appendChild(e);
+    else
+        return e;
+}
+
+function addSelectOption(select, value, text, selected) {
+    var option = document.createElement("option");
+    if (selected)
+        option.setAttribute("selected", "selected");
+    option.setAttribute("value", value);
+    option.appendChild(document.createTextNode(text))
+    select.appendChild(option);
+}
+
+function GetObjectPosition(obj) {
+    var curleft = curtop = 0;
+    if (obj.offsetParent) {
+        curleft = obj.offsetLeft
+        curtop = obj.offsetTop
+        while (obj = obj.offsetParent) {
+            curleft += obj.offsetLeft
+            curtop += obj.offsetTop
+        }
+    }
+    return [curleft, curtop];
+}
+
+function getPosX(obj) {
+    var curleft = 0;
+    if (obj.offsetParent)
+        while (1) {
+        curleft += obj.offsetLeft;
+        if (!obj.offsetParent)
+            break;
+        obj = obj.offsetParent;
+    }
+    else if (obj.x)
+        curleft += obj.x;
+    return curleft;
+}
+
+function getPosY(obj) {
+    var curtop = 0;
+    if (obj.offsetParent)
+        while (1) {
+        curtop += obj.offsetTop;
+        if (!obj.offsetParent)
+            break;
+        obj = obj.offsetParent;
+    }
+    else if (obj.y)
+        curtop += obj.y;
+    return curtop;
+}
+
+/*function openWindowPT(sUrl, sName, iT, iL, iW, iH) {
+    var win;
+    win = window.open(sUrl, sName, 'top=' + iT + ',left=' + iL + ',width=' + iW + ',height=' + iH + ',buttons=no,scrollbars=yes,location=no,menubar=no, resizable=yes,status=yes,directories=no,toolbar=no');
+}*/
+
+//thou separador de miles
+//pnt separador de decimales
+function formatNumber(num, dec, thou, pnt, curr1, curr2, n1, n2) {
+   if (typeof (showDecimals) != "undefined" && showDecimals) {
+      dec = 2;
+   }
+   
+   if (typeof (overrideDecimalSeparator) != "undefined" && (dec > 0)) {
+      pnt = overrideDecimalSeparator;
+   }
+
+   if (typeof (overrideThousandsSeparator) != "undefined") {
+      thou = overrideThousandsSeparator;
+   }
+
+    var x = Math.round(num * Math.pow(10, dec));
+    if (x >= 0)
+        n1 = n2 = '';
+
+    var y = ('' + Math.abs(x)).split('');
+    var z = y.length - dec;
+
+    if (z < 0) z--;
+    for (var i = z; i < 0; i++)
+        y.unshift('0');
+
+    y.splice(z, 0, pnt);
+    if (y[0] == pnt)
+        y.unshift('0');
+
+    while (z > 3) {
+        z -= 3;
+        y.splice(z, 0, thou);
+    }
+
+    var r = curr1 + n1 + y.join('') + n2 + curr2;
+    return r;
+}
+
+function visible(element) {
+    return YAHOO.util.Dom.get(element).style.display != 'none';
+}
+
+function toggle(element) {
+    element = YAHOO.util.Dom.get(element);
+    element[element.visible(element) ? 'hide' : 'show'](element);
+    return element;
+}
+
+function hide(element) {
+    YAHOO.util.Dom.get(element).style.display = 'none';
+    return element;
+}
+
+function show(element) {
+    YAHOO.util.Dom.get(element).style.display = '';
+    return element;
+}
+
+function backToTop() {
+    var x1 = x2 = x3 = 0;
+    var y1 = y2 = y3 = 0;
+
+    if (document.documentElement) {
+        x1 = document.documentElement.scrollLeft || 0;
+        y1 = document.documentElement.scrollTop || 0;
+    }
+
+    if (document.body) {
+        x2 = document.body.scrollLeft || 0;
+        y2 = document.body.scrollTop || 0;
+    }
+
+    x3 = window.scrollX || 0;
+    y3 = window.scrollY || 0;
+
+    var x = Math.max(x1, Math.max(x2, x3));
+    var y = Math.max(y1, Math.max(y2, y3));
+
+    window.scrollTo(Math.floor(x / 2), Math.floor(y / 2));
+
+    if (x > 0 || y > 0) {
+        window.setTimeout("backToTop()", 25);
+    }
+}
+
+function trim(str) {
+    for (var i = 0; i < str.length; i++) {
+        if (str.charAt(i) == " ")
+            str = str.substring(i + 1, str.length);
+        else
+            break;
+    }
+
+    for (var i = str.length - 1; i >= 0; i = str.length - 1) {
+        if (str.charAt(i) == " ")
+            str = str.substring(0, i);
+        else
+            break;
+    }
+
+    return str;
+}
+
+var wd_L1 = new Array(7);
+wd_L1[0] = "Sunday";
+wd_L1[1] = "Monday";
+wd_L1[2] = "Tuesday";
+wd_L1[3] = "Wednesday";
+wd_L1[4] = "Thursday";
+wd_L1[5] = "Friday";
+wd_L1[6] = "Saturday";
+
+var wds_L1 = new Array(7);
+wds_L1[0] = "Sun";
+wds_L1[1] = "Mon";
+wds_L1[2] = "Tue";
+wds_L1[3] = "Wed";
+wds_L1[4] = "Thu";
+wds_L1[5] = "Fri";
+wds_L1[6] = "Sat";
+
+var mn_L1 = new Array(12);
+mn_L1[0] = "January";
+mn_L1[1] = "February";
+mn_L1[2] = "March";
+mn_L1[3] = "April";
+mn_L1[4] = "May";
+mn_L1[5] = "June";
+mn_L1[6] = "July";
+mn_L1[7] = "August";
+mn_L1[8] = "September";
+mn_L1[9] = "October";
+mn_L1[10] = "November";
+mn_L1[11] = "December";
+
+var mns_L1 = new Array(12);
+mns_L1[0] = "Jan";
+mns_L1[1] = "Feb";
+mns_L1[2] = "Mar";
+mns_L1[3] = "Apr";
+mns_L1[4] = "May";
+mns_L1[5] = "Jun";
+mns_L1[6] = "Jul";
+mns_L1[7] = "Aug";
+mns_L1[8] = "Sep";
+mns_L1[9] = "Oct";
+mns_L1[10] = "Nov";
+mns_L1[11] = "Dec";
+
+var wd_L2 = new Array(7);
+wd_L2[0] = "Domingo";
+wd_L2[1] = "Lunes";
+wd_L2[2] = "Martes";
+wd_L2[3] = "Miércoles";
+wd_L2[4] = "Jueves";
+wd_L2[5] = "Viernes";
+wd_L2[6] = "Sábado";
+
+var wds_L2 = new Array(7);
+wds_L2[0] = "Dom";
+wds_L2[1] = "Lun";
+wds_L2[2] = "Mar";
+wds_L2[3] = "Mie";
+wds_L2[4] = "Jue";
+wds_L2[5] = "Vie";
+wds_L2[6] = "Sab";
+
+var mn_L2 = new Array(12);
+mn_L2[0] = "Enero";
+mn_L2[1] = "Febrero";
+mn_L2[2] = "Marzo";
+mn_L2[3] = "Abril";
+mn_L2[4] = "Mayo";
+mn_L2[5] = "Junio";
+mn_L2[6] = "Julio";
+mn_L2[7] = "Agosto";
+mn_L2[8] = "Septiembre";
+mn_L2[9] = "Octubre";
+mn_L2[10] = "Noviembre";
+mn_L2[11] = "Diciembre";
+
+var mns_L2 = new Array(12);
+mns_L2[0] = "Ene";
+mns_L2[1] = "Feb";
+mns_L2[2] = "Mar";
+mns_L2[3] = "Abr";
+mns_L2[4] = "May";
+mns_L2[5] = "Jun";
+mns_L2[6] = "Jul";
+mns_L2[7] = "Ago";
+mns_L2[8] = "Sep";
+mns_L2[9] = "Oct";
+mns_L2[10] = "Nov";
+mns_L2[11] = "Dic";
+
+var wd_L4 = new Array(7);
+wd_L4[0] = "Domingo";
+wd_L4[1] = "Segunda-feira";
+wd_L4[2] = "Terça-feira";
+wd_L4[3] = "Quarta-feira";
+wd_L4[4] = "Quinta-feira";
+wd_L4[5] = "Sexta-feira";
+wd_L4[6] = "Sábado";
+
+var wds_L4 = new Array(7);
+wds_L4[0] = "Dom";
+wds_L4[1] = "Seg";
+wds_L4[2] = "Ter";
+wds_L4[3] = "Qua";
+wds_L4[4] = "Qui";
+wds_L4[5] = "Sex";
+wds_L4[6] = "Sáb";
+
+var mn_L4 = new Array(12);
+mn_L4[0] = "Janeiro";
+mn_L4[1] = "Fevereiro";
+mn_L4[2] = "Mar&ccedil;o";
+mn_L4[3] = "Abril";
+mn_L4[4] = "Maio";
+mn_L4[5] = "Junho";
+mn_L4[6] = "Julho";
+mn_L4[7] = "Agosto";
+mn_L4[8] = "Setembro";
+mn_L4[9] = "Outubro";
+mn_L4[10] = "Novembro";
+mn_L4[11] = "Dezembro";
+
+var mns_L4 = new Array(12);
+mns_L4[0] = "Jan";
+mns_L4[1] = "Fev";
+mns_L4[2] = "Mar";
+mns_L4[3] = "Abr";
+mns_L4[4] = "Mai";
+mns_L4[5] = "Jun";
+mns_L4[6] = "Jul";
+mns_L4[7] = "Ago";
+mns_L4[8] = "Set";
+mns_L4[9] = "Out";
+mns_L4[10] = "Nov";
+mns_L4[11] = "Dez";
+
+function formatDateG(_d, _f, _l) {
+    if (_l == 1) {
+        _f = _f.replace(/\({dayName}\)/g, wd_L1[_d.getDay()]);
+        _f = _f.replace(/\({dayNameShort}\)/g, wds_L1[_d.getDay()]);
+        _f = _f.replace(/\({monthNameShort}\)/g, mns_L1[_d.getMonth()]);
+        _f = _f.replace(/\({monthName}\)/g, mn_L1[_d.getMonth()]);
+    } else if (_l == 4) {
+        _f = _f.replace(/\({dayName}\)/g, wd_L4[_d.getDay()]);
+        _f = _f.replace(/\({dayNameShort}\)/g, wds_L4[_d.getDay()]);
+        _f = _f.replace(/\({monthNameShort}\)/g, mns_L4[_d.getMonth()]);
+        _f = _f.replace(/\({monthName}\)/g, mn_L4[_d.getMonth()]);
+    }
+    else {
+        _f = _f.replace(/\({dayName}\)/g, wd_L2[_d.getDay()]);
+        _f = _f.replace(/\({dayNameShort}\)/g, wds_L2[_d.getDay()]);
+        _f = _f.replace(/\({monthNameShort}\)/g, mns_L2[_d.getMonth()]);
+        _f = _f.replace(/\({monthName}\)/g, mn_L2[_d.getMonth()]);
+    }
+    _f = _f.replace(/\({day}\)/g, _d.getDate());
+    _f = _f.replace(/\({year}\)/g, _d.getFullYear());
+    return _f;
+}
+
+function formatTime(_d, _f) {
+
+    _f = _f.replace(/H/g, _d.getHours());
+
+    if (_d.getHours() > 12)
+        _f = _f.replace(/h/g, _d.getHours() - 12);
+    else
+        _f = _f.replace(/h/g, _d.getHours());
+
+    if (_d.getHours() < 10)
+        hours = '0' + _d.getHours();
+    else
+        hours = _d.getHours();
+
+    _f = _f.replace(/HH/g, hours);
+
+    if (_d.getHours() > 12)
+        hours = _d.getHours() - 12;
+
+    if (hours < 10)
+        hours = '0' + hours;
+
+    _f = _f.replace(/hh/g, _d.getHours());
+
+    if (_d.getMinutes() < 10)
+        _f = _f.replace(/mm/g, '0' + _d.getMinutes());
+    else
+        _f = _f.replace(/mm/g, _d.getMinutes());
+
+    _f = _f.replace(/m/g, _d.getMinutes());
+
+    if (_d.getHours() >= 12)
+        _f = _f.replace(/tt/g, 'pm');
+    else
+        _f = _f.replace(/tt/g, 'am');
+
+    return _f;
+}
+
+
+function sanitize(_s) {
+    _s = _s.replace(/;/g, "");
+    _s = _s.replace(/\'/g, "");
+    _s = _s.replace(/--/g, "");
+    _s = _s.replace(/\/\*/g, "");
+    _s = _s.replace(/\*\//g, "");
+    _s = _s.replace(/Xp_/g, "");
+    _s = _s.replace(/</g, "");
+    _s = _s.replace(/>/g, "");
+
+    return trim(_s);
+}
+
+
+// Agencias
+var $q = function (selector, root) { return YAHOO.util.Selector.query(selector, root); }
+var $f = function (selector, root) { return YAHOO.util.Selector.query(selector, root, true); }
+
+function AgencyCommissionType(conf) {
+   this.conf = conf;
+   this.taxTotal = 0;
+   this.vat = parseFloat(jQuery('input#agencyVat').val());
+   this.useVat = false;
+   this.commissionTotal = 0;
+   this.commissionMSITotal = 0;
+   this.taxMSITotal = 0;
+   this.tempTotals = 0;
+   this.total = 0;
+   this.extraCommissions = 0;
+}
+
+function OverridedCommission(comissionPercentage){
+	var result = comissionPercentage - commissionMSIOverride;
+	return result < 0 ? 0 : result.toFixed(3);
+}
+
+AgencyCommissionType.prototype = {
+    getCommission: function (totals) {
+        var agencyCommissions = this.conf.commissions;
+        totalKeys = this.conf.products;
+        this.taxTotal = 0;
+        this.taxMSITotal = 0;
+        this.commissionMSITotal = 0;
+        var commission = 0;
+        //hide all
+        jQuery('.productRow').hide();
+
+        for (var i = 0; i < totalKeys.length; ++i) {
+            var totalKey = totalKeys[i];
+            if (totals[totalKey] != undefined && agencyCommissions[totalKey] != undefined) {
+                //aqui se le restan los impuestos.
+                var tax = totals[totalKey][1];
+                var totalAmountWithTax = totals[totalKey][0];
+                var totalAmount = totals[totalKey][0] - tax;
+                var comissionPercentage = agencyCommissions[totalKey];
+                var commissionTotal = (totalAmount < 0 ? 0 : totalAmount) * comissionPercentage;
+                if (totalAmount > 0) {
+                    jQuery('.tableRow_' + totalKey).show();
+                    jQuery('.amountTotal_' + totalKey).html(formatNumber(totalAmountWithTax, 2, ',', '.', '', ''));
+                    jQuery('.tax_' + totalKey).html(formatNumber(tax, 2, ',', '.', '', ''));
+                    jQuery('.amountCommissionable_' + totalKey).html(formatNumber(totalAmount, 2, ',', '.', '', ''));
+                    jQuery('.commissionPercentage_' + totalKey).html((comissionPercentage * 100).toFixed(1));
+                    this.taxTotal += tax;
+
+                    //display de comision
+                    var commisionTotalWithVat = commissionTotal;
+                    //vat
+                    var comVat = commissionTotal * this.vat;
+                    jQuery('.vat_' + totalKey).html(formatNumber(comVat, 2, ',', '.', '', ''));
+                    commisionTotalWithVat += comVat;
+                    jQuery('.vatLessCommission_' + totalKey).html(formatNumber(commissionTotal, 2, ',', '.', '', ''));
+                    jQuery('.commissionTotal_' + totalKey).html(formatNumber(commissionTotal, 2, ',', '.', '', ''));
+                    jQuery('.commissionTotalWithVat_' + totalKey).html(formatNumber(commisionTotalWithVat, 2, ',', '.', '', ''));
+                    //end display comission
+
+                    if (commissionMSIOverride > 0) {
+                        //msi override calculations
+                        var commisionP = OverridedCommission(comissionPercentage);
+                        var commissionMSITotal = (totalAmount < 0 ? 0 : totalAmount) * commisionP;
+                        var comVatMSI = commissionMSITotal * this.vat;
+                        this.taxMSITotal += comVatMSI;
+                        this.commissionMSITotal += commissionMSITotal;
+                        jQuery('.msi-vat_' + totalKey).html(formatNumber(comVatMSI, 2, ',', '.', '', ''));
+                        jQuery('.msi-commissionPercentage_' + totalKey).html(commisionP * 100);
+                        jQuery('.msi-vatLessCommission_' + totalKey).html(formatNumber(commissionMSITotal, 2, ',', '.', '', ''));
+                        jQuery('.msi-commissionTotal_' + totalKey).html(formatNumber(commissionMSITotal, 2, ',', '.', '', ''));
+                        jQuery('.msi-commissionTotalWithVat_' + totalKey).html(formatNumber((commissionMSITotal + comVatMSI), 2, ',', '.', '', ''));
+                    }
+                }
+                if (commissionTotal > 0)
+                    commission += commissionTotal;
+            }
+        }
+        return commission;
+    },
+
+    setCurrency: function (root) {
+        var curr = this.conf.currency;
+        jQuery('.agency-currency').each(function () {
+            jQuery(this).html(curr);
+        });
+    },
+
+    updateCommissionWithVat: function () {
+        var ban = $f(".calculateBan");
+        if (ban) {
+            this.setCommission(ban, this.commissionTotal);
+        }
+    },
+
+    setCommissionVat: function () {
+        this.vat = parseFloat(jQuery('input#agencyVat').val());
+        this.getCommission(this.tempTotals);
+        this.updateCommissionWithVat();
+    },
+
+         // preguntar si se usa el nuevo Scheme de comisiones de ser así pedirlo por Ajax
+    setCommission: function (root, commission) {
+        var commisionTotalWithVat = commission;
+        if (this.extraCommissions > 0 && this.useVat && this.vat > 0)
+        {
+            commission -= this.extraCommissions;
+        }
+        var comVat = commission * this.vat;
+        if (this.useVat && this.vat > 0)
+            commisionTotalWithVat += comVat;
+        jQuery('.agency-commission-vat').html(formatNumber(comVat, 2, ',', '.', '', ''));
+        jQuery('.vatPercentage_item').html(this.vat * 100);
+
+        jQuery('.agency-subcommission').html(formatNumber(commission, 2, ',', '.', '', ''));
+
+        jQuery('.agency-commission').each(function () {
+            jQuery(this).html(formatNumber(commisionTotalWithVat, 2, ',', '.', '', ''));
+        });
+
+        //MSI
+        var commisionTotalWithVat = this.commissionMSITotal;
+        if (this.useVat && this.vat > 0)
+            commisionTotalWithVat += this.taxMSITotal;
+        jQuery('.agency-subcommission-msi').html(formatNumber(commisionTotalWithVat - this.taxMSITotal, 2, ',', '.', '', ''));
+        jQuery('.agency-commission-vat-msi').html(formatNumber(this.taxMSITotal, 2, ',', '.', '', ''));
+        jQuery('.agency-commission-msi').html(formatNumber(commisionTotalWithVat, 2, ',', '.', '', ''));
+        jQuery('.amount-with-discount-msi').html(formatNumber(this.total - commisionTotalWithVat, 2, ',', '.', '', ''));
+    },
+
+    updateCommissionTotal: function (cont, total, commission) {
+        var currency = this.conf.currency;
+        var root = $f(cont);
+        if (root) {
+            this.total = total;
+            jQuery('.reservation-total').each(function () {
+                jQuery(this).html(formatNumber(total, 2, ',', '.', '', ''));
+            });
+            var totalTaxLess = total - this.taxTotal;
+            jQuery('.tax-total').html(formatNumber(this.taxTotal, 2, ',', '.', '', ''));
+            jQuery('.reservation-vatless-total').html(formatNumber(totalTaxLess, 2, ',', '.', '', ''));
+            this.setCommission(root, commission);
+            this.setCurrency(root);
+
+            var awd = $f(".amount-with-discount", root);
+
+            if (awd) {
+                jQuery('.amount-with-discount').html(formatNumber(total - commission, 2, ',', '.', '', ''));
+            }
+        }
+    },
+
+    update: function (total, totals) {
+        if (this.conf.active) {
+            this.total = total;
+            var commission = this.getCommission(totals) + this.extraCommissions;
+            this.commissionTotal = commission;
+            this.tempTotals = totals;
+            this.updateCommissionTotal(".comision-default", total, commission);
+            this.updateCommissionTotal(".instant-discount", total, commission);
+            this.updateCommissionTotal(".account-credit", total, commission);
+
+            var aux = jQuery("#aux").val();
+
+            if (total < 1000) {
+                jQuery(".AmountMin").toggle(false);
+            } else {
+                for (var a = 0; a <= aux; a++) {
+                    jQuery("#visible" + a).removeClass('AmountMin');
+                }
+                jQuery(".AmountMin").toggle(true);
+            }
+
+            var ban = $f(".agency-commission-ban");
+
+            if (ban) {
+                this.setCommission(ban, commission)
+                this.setCurrency(ban);
+            }
+        }
+        // custom discounts
+        if (this.conf.applyCustomDiscounts) {
+            var totalKeys = this.conf.products;
+            var totalAmount = total;
+            var totalDiscount = 0;
+            for (var i = 0; i < totalKeys.length; ++i) {
+                var currentKey = totalKeys[i];
+                if (totals[currentKey] != undefined && objCommissionConfig[currentKey] != undefined) {
+                    var currentProduct = objCommissionConfig[currentKey];
+                    var discount = jQuery("#discountProduct_" + currentKey).val();
+                    var amountToDiscount = (currentProduct[0] - currentProduct[1]) * parseFloat(discount);
+                    if(amountToDiscount > 0)
+                        totalDiscount += amountToDiscount;
+                }
+            }
+            jQuery("#amountDiscountTotalAmount").html(formatNumber(totalDiscount, 2, ',', '.', '', ''));
+            jQuery("#amountTotalWithoutDiscount").html(formatNumber(totalAmount - totalDiscount, 2, ',', '.', '', ''));
+        }
+        //fin custom discounts
+    },
+
+    startUI: function () {
+        if (this.conf.active) {
+            var ctx = $f(".agency-commission-type");
+
+            if (ctx) {
+                var discountRadio = $f(".agency-commission-discount", ctx);
+                var def = $f(".comision-default", ctx);
+                var discount = $f(".instant-discount", ctx);
+                var credit = $f(".account-credit", ctx);
+                var divErr = $f(".divErr", ctx);
+
+                function updateVat(val) {
+                    if (agencyCommissionType) {
+                        agencyCommissionType.useVat = val;
+                        agencyCommissionType.updateCommissionWithVat();
+                    }
+                }
+
+                function selectDiscount() {
+                    YAHOO.util.Dom.setStyle(def, "display", "none");
+                    YAHOO.util.Dom.setStyle(discount, "display", "");
+                    //YAHOO.util.Dom.setStyle(credit, "display", "none");
+                    if (divErr) YAHOO.util.Dom.setStyle(divErr, "display", "none");
+                    jQuery('.vatElement').addClass('hide');
+                    jQuery('.vatElementHide').removeClass('hide');
+                    updateVat(false);
+                    jQuery(".paymentTypeHead").attr('colspan', '1');
+                }
+
+                if (discountRadio.checked) {
+                    selectDiscount();
+                }
+
+                YAHOO.util.Event.on(discountRadio, "click", selectDiscount);
+
+                var depositRadio = $f(".agency-commission-deposit", ctx);
+
+                function selectCredit() {
+                    YAHOO.util.Dom.setStyle(def, "display", "none");
+                    //YAHOO.util.Dom.setStyle(discount, "display", "none");
+                    YAHOO.util.Dom.setStyle(credit, "display", "");
+                    if (divErr) YAHOO.util.Dom.setStyle(divErr, "display", "none");
+                    jQuery('.vatElement').removeClass('hide');
+                    jQuery('.vatElementHide').addClass('hide');
+                    updateVat(true);
+                    jQuery(".paymentTypeHead").attr('colspan', '3');
+                }
+
+                if (depositRadio.checked) {
+                    selectCredit();
+                }
+
+                YAHOO.util.Event.on(depositRadio, "click", selectCredit);
+            }
+            //links de detalle
+            jQuery('#showComDetail').click(function () {
+                jQuery('#commissionList').removeClass('hide');
+                jQuery('#hideComDetail').show();
+                jQuery(this).hide();
+            });
+            jQuery('#hideComDetail').click(function () {
+                jQuery('#commissionList').addClass('hide');
+                jQuery('#showComDetail').show();
+                jQuery(this).hide();
+            });
+        }
+    },
+
+    isValid: function () {
+        if (this.conf.active) {
+            var ctx = $f(".agency-commission-type");
+
+            if (ctx) {
+                var divErr = $f(".divErr", ctx);
+                var discountRadio = $f(".agency-commission-discount", ctx);
+                var depositRadio = $f(".agency-commission-deposit", ctx);
+
+                if (divErr) {
+                    YAHOO.util.Dom.setStyle(divErr, "display", "none");
+
+                    if (discountRadio && depositRadio) {
+                        if (!discountRadio.checked && !depositRadio.checked) {
+                            YAHOO.util.Dom.setStyle(divErr, "display", "");
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            var hdn = $f("#isAffiliateAgencyCommissionable");
+
+            if (hdn) {
+                hdn.value = depositRadio.checked;
+            }
+        }
+
+        return true;
+    }
+};
+
+
+//Requieren jquery
+function setHiddenValue(key, value) {
+   $('#' + key).val(value);
+}
+
+function submitForm(formId, url) {
+   $("#" + formId).attr("action", url);
+   $("#" + formId).submit();
+   return false;
+}
+
+
+function getActionToFilterByName(ctx, sortOrderDefault, sortOrder, isAscDefault, isAsc, resultsUrl, filterAsParameter) {
+   var action = resultsUrl;
+   var hasFilters = window.selectedFilters && window.selectedFilters.join("/");
+
+   if (hasFilters && !filterAsParameter) {
+      var fUri = window.selectedFilters.join("/");
+      action += "/" + fUri;
+   }
+
+   var hasParameters = false;
+
+   if (YAHOO.util.Dom.get('HotelName').value != "") {
+      action += "?HotelName=" + escape(YAHOO.util.Dom.get('HotelName').value);
+      hasParameters = true;
+   }
+
+   if (sortOrderDefault != sortOrder) {
+      action += (hasParameters ? "&" : "?") + "SortField=" + sortOrder;
+      hasParameters = true;
+   }
+
+   if (isAscDefault != isAsc) {
+      action += (hasParameters ? "&" : "?") + "IsAscending=" + isAsc;
+      hasParameters = true;
+   }
+
+   if (hasFilters && filterAsParameter) {
+      action += (hasParameters ? "&" : "?") + "f=" + encodeURIComponent(window.selectedFilters.join("/"));
+      hasParameters = true;
+   }
+
+   if (hasFilters && !filterAsParameter && (ctx + "/" + action).length > 250) return getActionToFilterByName(ctx, sortOrderDefault, sortOrder, isAscDefault, isAsc, resultsUrl, true);
+   else return action;
+}
+/*
+function initCustomerMenu(config) {
+   var customerMenuToggler = document.getElementById("customerMenuToggler");
+   var customerMenu = document.getElementById("customerMenu");
+   var isCustomerMenuOpen = false;
+
+   customerMenuToggler.onclick = function () {
+      customerMenu.style.display = isCustomerMenuOpen ? "none" : "block";
+      isCustomerMenuOpen = !isCustomerMenuOpen;
+      return false;
+   };
+
+   var customerMenuCloser = document.getElementById("customerMenuCloser");
+
+   function close() {
+      customerMenu.style.display = "none";
+      isCustomerMenuOpen = false;
+   }
+
+   customerMenuCloser.onclick = function () {
+      close();
+      return false;
+   };
+
+   var visitMotives = document.getElementsByName("visitMotive");
+
+   function getSelectedMotiveId() {
+      for (var i = 0; i < visitMotives.length; ++i) {
+         var visitMotive = visitMotives[i];
+         if (visitMotive.checked) return visitMotive.id;
+      }
+
+      return undefined;
+   }
+
+   var customerMenuSave = document.getElementById("customerMenuSave");
+   var customerMenuSaved = document.getElementById("customerMenuSaved");
+
+   if (customerMenuSave) {
+      customerMenuSave.onclick = function () {
+         var selectedMotiveId = getSelectedMotiveId();
+
+         if (selectedMotiveId === undefined) {
+            alert(config.noMotiveSelectedAlert);
+         }
+         else {
+            var utm_source = config.utm_source;
+            var utm_term = config.utm_term;
+            var utm_campaign = config.utm_campaign;
+            var utm_medium = document.getElementById(selectedMotiveId + "L").innerHTML;
+            var customerVisitMotiveIframe = document.getElementById("customerVisitMotiveIframe");
+
+            customerVisitMotiveIframe.src =
+            config.affiliateSiteUri +
+               "/paquetes?" +
+               "newCustomer=" + encodeURIComponent(true) +
+               "&visitMotive=" + encodeURIComponent(selectedMotiveId) +
+               "&utm_medium=" + encodeURIComponent(utm_medium) +
+               "&utm_source=" + encodeURIComponent(utm_source) +
+               "&utm_term=" + encodeURIComponent(utm_term) +
+               "&utm_campaign=" + encodeURIComponent(utm_campaign);
+
+            close();
+
+            for (var i = 0; i < visitMotives.length; ++i) {
+               var visitMotive = visitMotives[i];
+               visitMotive.setAttribute("disabled", "disabled");
+            }
+
+            customerMenuSave.style.display = "none";
+            customerMenuSaved.style.display = "";
+         }
+      };
+   }
+}*/
+String.prototype.toNumber = function() {
+    return this.replace(/\s/g, "").replace(/,/g, "");
+}
+
+
+//Esta funciona la usamos para saber
+//si cotizamos en puntos y pesos
+var usingPoints = function (callback) {
+   if (document.querySelectorAll(".usePoints").length) {
+        if (typeof callback === "function")
+            callback(true);
+        return true;
+    }
+    if (typeof callback === "function") {
+        callback(false);
+    }
+    return false;
+}
+
+/**
+ * Esta función nos ayuda a realizar una suma 
+ * por cada uno de los parametros que se le envian
+ * @param addons ej. { Transfer: 230, Tour: 8900, ETC:900 }
+ */
+function summaryPoints(addons) {
+    var totalPoints = 0;
+    try {
+        for (key in addons) {
+            if (addons.hasOwnProperty(key)) {
+                var value = addons[key];
+                //console.log(value.exchangeTo({ formatNumber: FmtNumber.CurrencyShortNoSymbol, addCurrencyText: false, addAdditionalSection: false }));
+                if (typeof value == "number") {
+                    var points = value.exchangeTo({ formatNumber: FmtNumber.CurrencyShortNoSymbol, addCurrencyText: false, addAdditionalSection: false }).toNumber();
+                    totalPoints += parseFloat(points);
+                }     
+            }
+        }
+    } catch (e) {
+        console.log(e.getMessage);
+    }
+    
+    return totalPoints;
+}
+
+//thou separador de miles
+//pnt separador de decimales
+function formatPoints(num, dec, thou, pnt) {
+
+    if ((typeof (overrideDecimalSeparator) != "undefined" && typeof (overrideDecimalSeparator) != undefined) && (dec > 0)) {
+        pnt = overrideDecimalSeparator;
+    }
+    if (typeof (overrideThousandsSeparator) != "undefined" && typeof (overrideThousandsSeparator) != undefined) {
+        thou = overrideThousandsSeparator;
+    }
+    var x = Math.round(num * Math.pow(10, dec));
+    var y = ('' + Math.abs(x)).split('');
+    var z = y.length - dec;
+    if (z < 0) z--;
+    for (var i = z; i < 0; i++)
+        y.unshift('0');
+    y.splice(z, 0, pnt);
+    if (y[0] == pnt)
+        y.unshift('0');
+    while (z > 3) {
+        z -= 3;
+        y.splice(z, 0, thou);
+    }
+    var r = y.join('');
+    return r;
+}
+
+//thou separador de miles
+//pnt separador de decimales
+function formatStringToFloat(num, thou, pnt) {
+
+    if ((typeof (overrideDecimalSeparator) != "undefined" && typeof (overrideDecimalSeparator) != undefined)) {
+        pnt = overrideDecimalSeparator;
+
+        if (overrideDecimalSeparator == '.') {
+            num = num.replace(',', '');
+        }
+        else if (overrideDecimalSeparator == ',') {
+            num = num.replace(/\./g, '');
+            num = num.replace(',', '.');
+        }
+    }
+    else {
+        num = num.replace(',', '');
+    }
+    if (typeof (overrideThousandsSeparator) != "undefined" && typeof (overrideThousandsSeparator) != undefined) {
+        thou = overrideThousandsSeparator;
+    }
+    
+    var numFloat = parseFloat(num);
+    return numFloat;
+}

@@ -1,0 +1,360 @@
+// Initializes a new instance of the StringBuilder class
+// and appends the given value if supplied
+function StringBuilder(value) {
+   this.strings = new Array("");
+   this.append(value);
+};
+
+// Appends the given value to the end of this instance.
+StringBuilder.prototype.append = function (value)
+{
+   if (value)
+   {
+      this.strings.push(value);
+   }
+};
+
+// Clears the string buffer
+StringBuilder.prototype.clear = function () {
+   this.strings.length = 1;
+};
+
+// Converts this instance to a String.
+StringBuilder.prototype.toString = function () {
+   return this.strings.join("");
+};
+
+String.prototype.capitalize = function () {
+   if (this.length > 0)
+      return this.slice(0, 1).toUpperCase() + this.slice(1, this.length);
+   else
+      return this;
+};
+
+
+var ExchangeTypeEnum = {
+   CurrencyToPoint: 1,
+   None: 0
+};
+
+ExchangeCurrency = function () {
+   this.currency = "",
+   this.currencyDisplay = "",
+   this.affiliateSiteId = undefined,
+   this.enableRound = false,
+   this.request = undefined,
+   this.language = undefined
+};
+
+
+
+ExchangeCurrency.prototype.factoryExchangeMethod = function (enableRound, currencyDisplay, currency, request, exchangeType, affiliateSiteId, language, useCombinedPriceWithMinimumZero) {
+   useCombinedPriceWithMinimumZero = useCombinedPriceWithMinimumZero || false; 
+   this.enableRound = enableRound;
+   this.affiliateSiteId = affiliateSiteId;
+   this.currency = currency;
+   this.currencyDisplay = currencyDisplay;
+   this.request = request;
+   this.language = language;
+   this.func = null;
+
+   switch (exchangeType) {
+      case ExchangeTypeEnum.CurrencyToPoint:
+           func = this.exchangeToQuotedCurrency(true, useCombinedPriceWithMinimumZero);
+         break;
+      default:
+         func = this.exchangeToQuotedCurrency(false);
+         break;
+   }
+};
+
+
+ExchangeCurrency.prototype.exchangeToQuotedCurrency = function (exchange, useCombinedPriceWithMinimumZero) {
+    var that = this;
+    Number.prototype.exchangeTo = function(requestExchangeCurrency, forceSection) {
+        if (requestExchangeCurrency !== undefined) {
+            that.request.formatNumber = requestExchangeCurrency.formatNumber || 0;
+            that.request.addCurrencyText = requestExchangeCurrency.addCurrencyText || false;
+            that.request.onlyAdditionalSection = requestExchangeCurrency.onlyAdditionalSection || false;
+            that.request.addAdditionalSection = requestExchangeCurrency.addAdditionalSection || false;
+            that.request.showDecimal = requestExchangeCurrency.showDecimal || false;
+            that.request.showCurrencyCode = requestExchangeCurrency.showCurrencyCode || false;
+            that.request.ResponseType = requestExchangeCurrency.ResponseType || ResponseType.String;
+            that.request.setToMinimum = requestExchangeCurrency.setToMinimum || false;
+        }
+
+        var amount = this;
+        var stringBuilder = new StringBuilder();
+
+        if (exchange) {
+            var calculator = new PointCalculatorBase();
+            calculator.setImplementor(new PointCalculatorConcreteImpl());
+            var request = new DefaultCalculatorRequest(amount, that.currency, that.currencyDisplay, that.affiliateSiteId, that.language, exchange, that.request.setToMinimum);
+            var response = calculator.calculate(request);
+
+            if (that.request.ResponseType === ResponseType.String) {
+                stringBuilder = that.getStringExchangeWithConfiguration(response, stringBuilder, that.request, useCombinedPriceWithMinimumZero);
+            } else {
+                return response.partialAmountInBaseCurrency;
+            }
+        } else if (!exchange && !(typeof (forceSection) === "undefined") && forceSection) {
+            var calculatorSection = new PointCalculatorBase();
+            calculatorSection.setImplementor(new PointCalculatorConcreteImpl());
+            var requestSection = new DefaultCalculatorRequest(amount, that.currency, that.currencyDisplay, that.affiliateSiteId, that.language, forceSection, that.request.setToMinimum);
+            requestSection.forceSection = forceSection;
+            var responseSection = calculatorSection.calculate(requestSection);
+
+            if (that.request.ResponseType === ResponseType.String) {
+                stringBuilder = that.getStringExchangeWithConfiguration(responseSection, stringBuilder, that.request, useCombinedPriceWithMinimumZero);
+            } else {
+                return responseSection.partialAmountInBaseCurrency;
+            }
+    }
+    else {
+            if (that.request.ResponseType === ResponseType.String) {
+                stringBuilder = that.getStringWithOutConfiguration(amount, stringBuilder, that.request);
+            } else {
+                return amount;
+            }
+        }
+
+        return stringBuilder.toString();
+    };
+
+    Number.prototype.ptFormatPoints = function(requestExchangeCurrency) {
+        if (requestExchangeCurrency !== undefined) {
+            that.request.formatNumber = requestExchangeCurrency.formatNumber || 0;
+            that.request.addCurrencyText = requestExchangeCurrency.addCurrencyText || false;
+            that.request.onlyAdditionalSection = requestExchangeCurrency.onlyAdditionalSection || false;
+            that.request.addAdditionalSection = requestExchangeCurrency.addAdditionalSection || false;
+            that.request.showDecimal = requestExchangeCurrency.showDecimal || false;
+            that.request.showCurrencyCode = requestExchangeCurrency.showCurrencyCode || false;
+            that.request.ResponseType = requestExchangeCurrency.ResponseType || ResponseType.String;
+            that.request.setToMinimum = requestExchangeCurrency.setToMinimum || false;
+            that.request.baseCurrencyDisplayText = that.request.currencyDisplayText;//Fix. Points instead of Pesos.
+            that.request.baseCurrencyShortName = that.request.currencyShortName;//Fix. PTS instead of <Currency>.
+        }
+        var request = new ExchangeCurrencyRequest(that.request);
+        request.baseCurrencyDisplayText = that.request.currencyDisplayText;
+        request.baseCurrencyShortName = that.request.currencyShortName;
+        var amount = this;
+        var stringBuilder = new StringBuilder();
+        stringBuilder = that.getStringWithOutConfiguration(amount, stringBuilder, request);
+        return stringBuilder.toString();
+    }
+};
+
+
+Number.prototype.ptFormatNumber = function (fmtNumber, options) {
+   options = options;
+   var dec = options.decimal || 0;
+   var thou = options.thousandsSeparators || ",";
+   var pnt = options.decimalSeparators || ".";
+   var curr1 = options.currencySymbol || "$";
+   var curr2 = options.currencyText || "";
+   var n1 = options.n1 || "";
+   var n2 = options.n2 || "";
+   if (fmtNumber === FmtNumber.Currency) {
+      showDecimals = true;
+      thou = ",";
+      pnt = ".";
+      curr1 = "$";
+      dec = 2;
+   }
+   if (fmtNumber === FmtNumber.CurrencyNoSymbol) {
+      showDecimals = true;
+      thou = "";
+      curr1 = "";
+      thou = ",";
+      pnt = ".";
+      dec = 2;
+   }
+   if (fmtNumber === FmtNumber.CurrencyShortNoSymbol) {
+      showDecimals = false;
+      dec = 0;
+      thou = ",";
+      pnt = "";
+      curr1 = "";
+   }
+   if (fmtNumber === FmtNumber.CurrencyShort) {
+      showDecimals = false;
+      dec = 0;
+      thou = ",";
+      curr1 = "$";
+      pnt = "";
+   }
+   if (typeof (showDecimals) != "undefined" && showDecimals) {
+      dec = 2;
+   }
+
+   if (typeof (overrideDecimalSeparator) != "undefined" && (dec > 0)) {
+      pnt = overrideDecimalSeparator;
+   }
+
+   if (typeof (overrideThousandsSeparator) != "undefined") {
+      thou = overrideThousandsSeparator;
+   }
+
+   var x = Math.round(this * Math.pow(10, dec));
+   if (x >= 0)
+      n1 = n2 = '';
+
+   var y = ('' + Math.abs(x)).split('');
+   var z = y.length - dec;
+
+   if (z < 0) z--;
+   for (var i = z; i < 0; i++)
+      y.unshift('0');
+
+   y.splice(z, 0, pnt);
+   if (y[0] == pnt)
+      y.unshift('0');
+
+   while (z > 3) {
+      z -= 3;
+      y.splice(z, 0, thou);
+   }
+
+   var r = curr1 + n1 + y.join('') + n2 + curr2;
+   return r;
+};
+
+
+ExchangeCurrency.prototype.getStringWithOutConfiguration = function (amount, stringBuilder, request) {
+
+   if (!(stringBuilder instanceof StringBuilder))
+      return "error";
+
+   if (request === undefined) {
+      stringBuilder.append(amount);
+   } else {
+      if (request.onlyAmount) {
+         if (request.formatNumber === undefined && request.formatNumber === 0) {
+            stringBuilder.append(amount);
+            return stringBuilder;
+         } else {
+            stringBuilder.append(amount.ptFormatNumber(request.formatNumber, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }));
+            return stringBuilder;
+         }
+      }
+
+      if (request.onlyAdditionalSection) {
+         stringBuilder.append("");
+         return stringBuilder;
+      }
+
+      if (request.formatNumber !== undefined && request.formatNumber !== 0)
+         stringBuilder.append(amount.ptFormatNumber(request.formatNumber, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }));
+      else
+         stringBuilder.append(amount);
+
+      if (request.addCurrencyText) {
+         if (request.showCurrencyCode) {
+             stringBuilder.append(" <span class=\"currency\">" + request.baseCurrencyShortName.toUpperCase() + "</span>");
+         }
+         else {
+             stringBuilder.append(" " + request.baseCurrencyDisplayText);
+         }
+      }
+   }
+   return stringBuilder;
+};
+
+ExchangeCurrency.prototype.getStringExchangeWithConfiguration = function (response, stringBuilder, request, useCombinedPriceWithMinimumZero) {
+   var that = this;
+   if (request === undefined)
+      stringBuilder.append(response.totalAmountInPoints);
+   else {
+      if (request.onlyAmount) {
+         if (request.formatNumber === undefined && request.formatNumber !== 0) {
+            stringBuilder.append(response.totalAmountInPoints);
+            return stringBuilder;
+         }
+         else {
+            stringBuilder.append(response.totalAmountInPoints.ptFormatAmount(request.formatNumber));
+            return stringBuilder;
+         }
+      }
+      if (request.onlyAdditionalSection) {
+          if (request.addAdditionalSection && response.amount > 0 && response.partialAmountInPoints != 0) {
+              var baseFormatNumber = { decimal: 0, thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: request.baseCurrencyShortName }
+              if (response.partialAmountInPoints > 0){
+                  baseFormatNumber = { decimal: 0, thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$"}
+              }
+              stringBuilder.append("<div class='spec AvailableCombinedCashPointsPayment'>" + conf.textValues.carPayAlternative + "</div><span class='combined-price'>" +
+              response.partialAmountInPoints.ptFormatNumber(request.formatNumber, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }) + " " +
+              that.currencyDisplay.toLowerCase().capitalize() + " + " +
+               response.partialAmountInBaseCurrency.ptFormatNumber(request.formatNumber, baseFormatNumber) +
+              " " + that.currency + "</span>"
+           );
+        }
+        if (request.addAdditionalSection && response.amount > 0 && response.partialAmountInPoints == 0 && useCombinedPriceWithMinimumZero == true) {
+            stringBuilder.append("<div class='spec'>" + conf.textValues.carPayAlternative + "</div><span class='combined-price'>" +
+              response.partialAmountInBaseCurrency.ptFormatNumber(request.formatNumber, { decimal: 0, thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }) +
+              " " + that.currency + "</span>"
+           );
+        }
+        return stringBuilder;
+     }
+      if (request.formatNumber !== undefined && request.formatNumber !== 0) {
+         if (request.formatNumber == FmtNumber.CurrencyShort)
+            stringBuilder.append(response.totalAmountInPoints.ptFormatNumber(FmtNumber.CurrencyShortNoSymbol, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }));
+         else if (request.formatNumber == FmtNumber.Currency)
+            stringBuilder.append(response.totalAmountInPoints.ptFormatNumber(FmtNumber.CurrencyNoSymbol, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }));
+         else
+            stringBuilder.append(response.totalAmountInPoints.ptFormatNumber(request.formatNumber, { decimal: 0, thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }));
+      }
+      else
+         stringBuilder.append(response.totalAmountInPoints + "");
+      if (request.addCurrencyText) {
+         if (request.showCurrencyCode) {
+            stringBuilder.append(" <span class=\"currency\">" + that.currencyDisplay.toLowerCase().capitalize() + "</span>");
+         }
+         else {
+            stringBuilder.append(" " + request.currencyDisplayText);
+         }
+      }
+      if (request.addAdditionalSection && response.amount > 0 && response.minimumPoints > 0) {
+          stringBuilder.append("<div class='spec'>" + conf.textValues.carPayAlternative + "</div><span class='combined-price'>" +
+         response.partialAmountInPoints.ptFormatNumber(FmtNumber.CurrencyShortNoSymbol, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }) + " " +
+         that.request.currencyShortName.toLowerCase().capitalize() + " + " +
+         response.partialAmountInBaseCurrency.ptFormatNumber(request.formatNumber, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }) + " " +
+         request.baseCurrencyShortName + "</span>"
+         );
+      } else if (request.addAdditionalSection && response.amount > 0 && response.minimumPoints == 0 && useCombinedPriceWithMinimumZero) {
+          stringBuilder.append("<div class='spec'>" + conf.textValues.carPayAlternativeShort + "</div><span class='combined-price'>" +               
+               response.partialAmountInBaseCurrency.ptFormatNumber(request.formatNumber, { thousandsSeparators: ",", decimalSeparators: ".", currencySymbol: "$", currencyText: "" }) + " " +
+               request.baseCurrencyShortName + "</span>"
+           );
+       }
+   }
+   return stringBuilder;
+};
+
+var FmtNumber = {
+   Currency: 1,
+   CurrencyNoSymbol: 2,
+   CurrencyShortNoSymbol: 3,
+   CurrencyShort: 4
+};
+
+var ExchangeCurrencyRequest = function (request) {
+   request = request || {};
+   this.formatNumber = request.formatNumber || 0;
+   this.showDecimal = request.showDecimal || false;
+   this.addCurrencyText = request.addCurrencyText || false;
+   this.currencyShortName = request.currencyShortName || '';
+   this.currencyDisplayText = request.currencyDisplayText || '';
+   this.onlyAmount = request.onlyAmount || false;
+   this.showCurrencyCode = request.showCurrencyCode || false;
+   this.baseCurrencyDisplayText = request.baseCurrencyDisplayText || '';
+   this.baseCurrencyShortName = request.baseCurrencyShortName || '';
+   this.ResponseType = request.ResponseType || ResponseType.String;
+   this.setToMinimum = request.setToMinimum || false;
+};
+
+
+var ResponseType = {
+   String: 0,
+   PartialAmountCurrencyBase: 1
+};
